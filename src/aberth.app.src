@@ -1,0 +1,14 @@
+{application, aberth,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  sasl,
+                  barrel
+                 ]},
+  {mod, { aberth_app, []}},
+  {env, []}
+ ]}.
