@@ -9,9 +9,11 @@ aberth is a **generic BERT-RPC server** in Erlang. It uses
 [barrel](https://github.com/benoitc/barrel) for as TCP acceptor pool
 which provides low-latency when accepting connections.
 
+The inspiration for the name came from [Abarth](http://en.wikipedia.org/wiki/Abarth) and [BERT](http://bert-rpc.org/).
+
 ## Supported BERT-RPC features
 
-Aberth supports call, cast and info BERPs. It is up to you, however, to make use of info packets.
+Aberth supports call, cast and info BERPs. It is up to you, however, to make use of info packets. Aberth routes call and cast requests to your modules and takes care of encoding and decoding.
 
 ### TODO
 
@@ -50,7 +52,9 @@ Handlers = [some_module, some_adder],
 aberth:start_server(NumberOfAcceptors, Port, Handlers).
 ```
 
-That's about it - aberth is an OTP app so you can easily make it a part of your own OTP app.
+That's about it - aberth will listen to requests on Port number, with set number of acceptors. Scaling aberth is done via [barrel](https://github.com/benoitc/barrel), so all barrel options apply to aberth as well.
+
+Aberth is an OTP app so you can easily make it a part of your own OTP app.
 
 ### Test the server (from python)
 
@@ -70,5 +74,4 @@ r = svc.call.bubu.add(1234, 4321)
 puts r
 ```
 
-
-
+This code will print 5555.

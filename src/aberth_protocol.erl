@@ -1,19 +1,35 @@
+%% Copyright (c) 2013 Aleksandar Radulovic <alex@a13x.net>
+%%
+%% Permission to use, copy, modify, and/or distribute this software for any
+%% purpose with or without fee is hereby granted, provided that the above
+%% copyright notice and this permission notice appear in all copies.
+%%
+%% THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+%% WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+%% MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+%% ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+%% WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+%% ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+%% OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 -module(aberth_protocol).
 
+-type bert_type() :: call | cast.
+-type bert_info() :: any().
 -record(state, {
         transport = undefined,
         socket = undefined,
-        module = undefined,
-        function = undefined,
-        args = [],
-        info = undefined
+        type :: bert_type(),
+        info :: bert_info()
     }).
+-type state() :: #state{}.
 
 -export([init/4]).
 
 init(_Ref, Transport, Socket, _Opts) ->
     wait_request(#state{transport = Transport, socket = Socket}).
 
+-spec wait_request(state()) -> ok.
 wait_request(State=#state{transport=Transport, socket=Socket}) ->
     case Transport:recv(Socket, 0, 5000) of
         {ok, Payload} ->
@@ -33,20 +49,32 @@ reply(Reply, State=#state{transport=Transport, socket=Socket}) ->
     Transport:send(Socket, Returned),
     wait_request(State).
 
-call(Mod, Fun, Args) ->
+process_module(Mod, Fun, Args, Info) ->
+    case lists:member(Mod, erlang:loaded()) of
+        true -> process_method(Mod, Fun, Args, Info);
+        false -> aberth:not_loaded(Mod)
+    end.
+
+process_method(Mod, Fun, Args, _Info) ->
+    case erlang:function_exported(Mod, Fun, length(Args)) of
+        true -> {reply, apply(Mod, Fun, Args)};
+        false -> aberth:not_allowed(Fun)
+    end.
+
+process_call(Mod, Fun, Args, Info) ->
     case aberth_server:allowed(Mod) of
-        % true -> Reply = dict:from_list([{bleh, <<"blah">>}, {boo, <<"BOOB">>}, {what, 134}]);
-        true -> {reply, Mod:Fun(Args)};
+        true -> process_module(Mod, Fun, Args, Info);
         false -> aberth:no_such_module(Mod)
     end.
 
 process({call, Mod, Fun, Args}, _State=#state{info=Info}) ->
     io:format("info ~p~n", [Info]),
     io:format("module ~p~n", [Mod]),
-    Reply = call(Mod, Fun, Args),
+    Reply = process_call(Mod, Fun, Args, Info),
     {ok, Reply};
 
-process({cast, _Mod, _Fun, _Args}, _State) ->
+process({cast, Mod, Fun, Args}, _State=#state{info=Info}) ->
+    spawn(fun() -> process_call(Mod, Fun, Args, Info) end),
     {ok, {noreply}};
 
 process({info, Command, Options}, _State) ->

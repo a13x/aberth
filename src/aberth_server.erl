@@ -16,30 +16,37 @@
 -behaviour(gen_server).
 -author("Aleksandar Radulovic <alex@a13x.net>").
 
--export([start/1, start_link/1]).
+-export([start/0, start_link/0]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--export([allowed/1]).
+-export([allowed/1,add_handlers/1]).
 
--spec start(aberth:handlers()) -> {ok, pid()} | {error, any()}.
-start(Handlers) ->
-	gen_server:start({local, ?MODULE}, ?MODULE, Handlers, []).
+-spec start() -> {ok, pid()} | {error, any()}.
+start() ->
+	gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
--spec start_link(aberth:handlers()) -> {ok, pid()} | {error, any()}.
-start_link(Handlers) ->
-	gen_server:start_link({local, ?MODULE}, ?MODULE, Handlers, []).
+-spec start_link() -> {ok, pid()} | {error, any()}.
+start_link() ->
+	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 -spec allowed(aberth:handler()) -> true | false.
 allowed(Handler) ->
 	gen_server:call(?MODULE, {lookup, Handler}).
 
+-spec add_handlers(aberth:handlers()) -> ok.
+add_handlers(Handlers) ->
+	gen_server:call(?MODULE, {add_handlers, Handlers}).
+
 %% gen_server API
-init(Handlers) ->
+init([]) ->
 	ets:new(?MODULE, [set, named_table, protected]),
-	true = ets:insert(?MODULE, {handlers, Handlers}),
 	{ok, ?MODULE}.
+
+handle_call({add_handlers, Handlers}, _From, Table) ->
+	true = ets:insert(?MODULE, {handlers, Handlers}),
+	{reply, ok, Table};
 
 handle_call({lookup, Handler}, _From, Table) ->
 	[{handlers, Handlers}] = ets:lookup(Table, handlers),

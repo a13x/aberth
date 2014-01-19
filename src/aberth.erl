@@ -15,10 +15,54 @@
 -module(aberth).
 
 %% API.
--export([start/0]).
+-export([start/0, stop/0]).
 
-%% API.
+-export([start_server/3]).
+%% Utils
+-export([no_such_module/1, not_allowed/1, not_loaded/1]).
+
+%% Types
+-type handler() :: module().
+-type handlers() :: [handler()].
+-export_type([handlers/0]).
+
+%% Aplication
 start() ->
-	ok = application:start(barrel),
-	ok = application:start(sasl),
+	application:load(aberth),
+    aberth_app:ensure_deps_started(),
 	ok = application:start(aberth).
+
+stop() ->
+	application:stop(aberth).
+
+%% Starting and loading aberth server
+-spec start_server(integer(), integer(), aberth:handlers()) -> {ok, pid()} | {error, term()}.
+start_server(NbAcceptors, Port, Handlers) ->
+%% @doc start aberth BERT-RPC server
+%%
+%% ```
+%%   NbAcceptors = integer()
+%%   Port = integer()
+%%   Handlers - any(),
+%% '''
+%%
+%% NbAcceptors is a number of processes that receive connections
+%% Port is a port number the server should listen to
+%% Handlers is a list of modules that are wired to the server
+	_ = lists:map((fun code:ensure_loaded/1), Handlers),
+	aberth_server:add_handlers(Handlers),
+	barrel:start_listener(aberth, NbAcceptors, barrel_tcp,
+          [{packet, 4}, {port, Port}], aberth_protocol, []).
+
+%% Utility funs
+no_such_module(Module) ->
+	Msg = list_to_binary(io_lib:format("Module '~p' not found", [Module])),
+	{error, {server, 1,	<<"ServerError">>, Msg, []}}.
+
+not_allowed(Func) ->
+	Msg = list_to_binary(io_lib:format("Method '~p' not allowed", [Func])),
+	{error, {server, 2,	<<"ServerError">>, Msg, []}}.	
+
+not_loaded(Mod) ->
+	Msg = list_to_binary(io_lib:format("Module '~p' not loaded", [Mod])),
+	{error, {server, 1, <<"ServerError">>, Msg, []}}.
