@@ -23,6 +23,10 @@ feel free to send a pull request!
 
 ## Usage
 
+> Note: You will need [rebar](https://github.com/rebar/rebar) to compile.
+
+Check the example app - it demonstrates including aberth in your OTP app, with clients in Python and Ruby.
+
 ### Create a simple module (or two)
 
 ```

@@ -1,0 +1,12 @@
+{application, black_adder,
+ [
+  {description, "Example BERT-RPC server using aberth"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { black_adder_app, []}},
+  {env, [{port, 10001}]}
+ ]}.

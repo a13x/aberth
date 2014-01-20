@@ -1,7 +1,9 @@
 .DS_Store
 .eunit
-ebin
-deps
+ebin/
+deps/
 *.o
 *.beam
 *.plt
+example/ebin
+example/deps
