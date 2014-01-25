@@ -74,7 +74,7 @@ assert response == 505
 ```
 require 'bertrpc'
 svc = BERTRPC::Service.new('localhost', 10001)
-r = svc.call.bubu.add(1234, 4321)
+r = svc.call.some_adder.add(1234, 4321)
 puts r
 ```
 
