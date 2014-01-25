@@ -50,10 +50,9 @@ handle_call({add_handlers, Handlers}, _From, Table) ->
 
 handle_call({lookup, Handler}, _From, Table) ->
 	[{handlers, Handlers}] = ets:lookup(Table, handlers),
-	io:format("I have handlers: ~p~n", [Handlers]),
-	io:format("Looking for handler: ~p~n", [Handler]),
+	lager:debug("I have handlers: ~p~n", [Handlers]),
+	lager:debug("Looking for handler: ~p~n", [Handler]),
 	Reply = lists:member(Handler, Handlers),
-	io:format("reply is: ~p~n", [Reply]),
 	{reply, Reply, Table};
 
 handle_call(_Msg, _From, Table) ->

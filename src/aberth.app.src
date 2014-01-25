@@ -7,6 +7,10 @@
                   kernel,
                   stdlib,
                   sasl,
+                  compiler,
+                  syntax_tools,
+                  goldrush,
+                  lager,
                   barrel
                  ]},
   {mod, { aberth_app, []}},

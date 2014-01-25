@@ -30,7 +30,8 @@
 start() ->
 	application:load(aberth),
     aberth_app:ensure_deps_started(),
-	ok = application:start(aberth).
+	ok = application:start(aberth),
+    lager:info("Aberth started.").
 
 stop() ->
 	application:stop(aberth).
@@ -66,3 +67,4 @@ not_allowed(Func) ->
 not_loaded(Mod) ->
 	Msg = list_to_binary(io_lib:format("Module '~p' not loaded", [Mod])),
 	{error, {server, 1, <<"ServerError">>, Msg, []}}.
+

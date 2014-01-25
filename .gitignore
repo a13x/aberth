@@ -7,3 +7,4 @@ deps/
 *.plt
 example/ebin
 example/deps
+example/log
