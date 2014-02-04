@@ -4,9 +4,10 @@ Copyright (c) 2014 Aleksandar Radulovic.
 
 __Version:__ 0.9
 
+[![Build Status](https://travis-ci.org/a13x/aberth.png?branch=master)](https://travis-ci.org/a13x/aberth)
 
-aberth is a **generic BERT-RPC server** in Erlang. It uses
-[barrel](https://github.com/benoitc/barrel) for as TCP acceptor pool
+aberth is a **generic BERT-RPC server** in Erlang. It exposes regular erlang modules and it uses
+[barrel](https://github.com/benoitc/barrel) as TCP acceptor pool
 which provides low-latency when accepting connections.
 
 The inspiration for the name came from [Abarth](http://en.wikipedia.org/wiki/Abarth) and [BERT](http://bert-rpc.org/).
