@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Aberth by a13x</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Aberth</h1>
+        <h2>Generic BERT-RPC server in Erlang</h2>
+        <a href="https://github.com/a13x/aberth" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a name="aberth---generic-bert-rpc-server-written-in-erlang" class="anchor" href="#aberth---generic-bert-rpc-server-written-in-erlang"><span class="octicon octicon-link"></span></a>aberth - generic BERT-RPC server written in Erlang</h1>
+
+<p>Copyright (c) 2014 Aleksandar Radulovic.</p>
+
+<p><strong>Version:</strong> 0.9</p>
+
+<p><a href="https://travis-ci.org/a13x/aberth"><img src="https://travis-ci.org/a13x/aberth.png?branch=master" alt="Build Status"></a></p>
+
+<p>aberth is a <strong>generic BERT-RPC server</strong> in Erlang. It exposes regular erlang modules and it uses
+<a href="https://github.com/benoitc/barrel">barrel</a> as TCP acceptor pool
+which provides low-latency when accepting connections.</p>
+
+<p>The inspiration for the name came from <a href="http://en.wikipedia.org/wiki/Abarth">Abarth</a> and <a href="http://bert-rpc.org/">BERT</a>.</p>
+
+<h2>
+<a name="supported-bert-rpc-features" class="anchor" href="#supported-bert-rpc-features"><span class="octicon octicon-link"></span></a>Supported BERT-RPC features</h2>
+
+<p>Aberth supports call, cast and info BERPs. It is up to you, however, to make use of info packets. Aberth routes call and cast requests to your modules and takes care of encoding and decoding.</p>
+
+<h3>
+<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h3>
+
+<p>There's still a bit of thinking left on how to pass the info BERPs to the handler modules in a neat way.
+Therefore, at the moment, those are not passed through - if you have an idea on how to elegantly solve this,
+feel free to send a pull request!</p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<blockquote>
+<p>Note: You will need <a href="https://github.com/rebar/rebar">rebar</a> to compile.</p>
+</blockquote>
+
+<p>Check the example app - it demonstrates including aberth in your OTP app, with clients in Python and Ruby.</p>
+
+<h3>
+<a name="create-a-simple-module-or-two" class="anchor" href="#create-a-simple-module-or-two"><span class="octicon octicon-link"></span></a>Create a simple module (or two)</h3>
+
+<pre><code>-module(some_module).
+
+-export([some_method/3]).
+
+some_method(One, Two, Three) -&gt;
+    dict:from_list([{one, One}, {two, Two}, {three, Three}]).
+</code></pre>
+
+<pre><code>-module(some_adder).
+
+-export([add/2]).
+
+add(One, Two) -&gt;
+    One + Two.
+</code></pre>
+
+<h3>
+<a name="start-aberth-server" class="anchor" href="#start-aberth-server"><span class="octicon octicon-link"></span></a>Start aberth server</h3>
+
+<pre><code>NumberOfAcceptors = 100,
+Port = 10001,
+Handlers = [some_module, some_adder],
+aberth:start_server(NumberOfAcceptors, Port, Handlers).
+</code></pre>
+
+<p>That's about it - aberth will listen to requests on Port number, with set number of acceptors. Scaling aberth is done via <a href="https://github.com/benoitc/barrel">barrel</a>, so all barrel options apply to aberth as well.</p>
+
+<p>Aberth is an OTP app so you can easily make it a part of your own OTP app.</p>
+
+<h3>
+<a name="test-the-server-from-python" class="anchor" href="#test-the-server-from-python"><span class="octicon octicon-link"></span></a>Test the server (from python)</h3>
+
+<pre><code>import bertrpc
+service = bertrpc.Service('localhost', 10001)
+response = service.request('call').some_adder.add(203,302)
+assert response == 505
+</code></pre>
+
+<h3>
+<a name="test-the-server-from-ruby" class="anchor" href="#test-the-server-from-ruby"><span class="octicon octicon-link"></span></a>Test the server (from Ruby)</h3>
+
+<pre><code>require 'bertrpc'
+svc = BERTRPC::Service.new('localhost', 10001)
+r = svc.call.some_adder.add(1234, 4321)
+puts r
+</code></pre>
+
+<p>This code will print 5555.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/a13x/aberth/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/a13x/aberth/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/a13x/aberth"></a> is maintained by <a href="https://github.com/a13x">a13x</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
