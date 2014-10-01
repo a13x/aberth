@@ -37,5 +37,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
+    ok = aberth_server:create_table(),
     {ok, { {one_for_one, 5, 10}, [?CHILD(aberth_server, worker)]} }.
 

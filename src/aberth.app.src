@@ -11,7 +11,8 @@
                   syntax_tools,
                   goldrush,
                   lager,
-                  barrel
+                  barrel,
+                  worker_pool
                  ]},
   {mod, { aberth_app, []}},
   {env, []}

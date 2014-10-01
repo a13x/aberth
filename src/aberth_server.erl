@@ -21,7 +21,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--export([allowed/1,add_handlers/1]).
+-export([create_table/0, allowed/1, add_handlers/1]).
 
 -spec start() -> {ok, pid()} | {error, any()}.
 start() ->
@@ -29,19 +29,41 @@ start() ->
 
 -spec start_link() -> {ok, pid()} | {error, any()}.
 start_link() ->
-	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    Workers = 
+        case application:get_env(aberth_server, workers) of
+            {ok, WorkerNum} -> WorkerNum;
+            undefined -> 100
+        end,
+    lager:info("Starting ~p workers", [Workers]),
+    wpool:start_pool(
+      ?MODULE,
+      [{workers, Workers},
+       {worker, {?MODULE, []}}]).
+
+
+-spec create_table() -> ok.
+create_table() ->
+    case ets:info(?MODULE, named_table) of
+        true -> exists;
+        undefined -> 
+            ets:new(?MODULE,
+                    [public,
+                     set,
+                     named_table,
+                     {read_concurrency, true}])
+    end,
+    ok.
 
 -spec allowed(aberth:handler()) -> true | false.
 allowed(Handler) ->
-	gen_server:call(?MODULE, {lookup, Handler}).
+	wpool:call(?MODULE, {lookup, Handler}).
 
 -spec add_handlers(aberth:handlers()) -> ok.
 add_handlers(Handlers) ->
-	gen_server:call(?MODULE, {add_handlers, Handlers}).
+	wpool:call(?MODULE, {add_handlers, Handlers}).
 
 %% gen_server API
 init([]) ->
-	ets:new(?MODULE, [set, named_table, protected]),
 	{ok, ?MODULE}.
 
 handle_call({add_handlers, Handlers}, _From, Table) ->
