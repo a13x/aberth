@@ -33,7 +33,7 @@ init(_Ref, Transport, Socket, _Opts) ->
 
 -spec wait_request(state()) -> ok.
 wait_request(State=#state{transport=Transport, socket=Socket}) ->
-    case Transport:recv(Socket, 0, 5000) of
+    case Transport:recv(Socket, 0) of
         {ok, Payload} ->
             Term = bert:decode(Payload),
             case process(Term, State) of
