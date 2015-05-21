@@ -1,6 +1,6 @@
 {application, aberth,
  [
-  {description, ""},
+  {description, "Generic BertRPC Server"},
   {vsn, "1"},
   {registered, []},
   {applications, [

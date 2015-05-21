@@ -20,6 +20,9 @@
 -export([start_server/3]).
 %% Utils
 -export([no_such_module/1, not_allowed/1, not_loaded/1]).
+%% Client
+-export([call/5, cast/5]).
+
 
 %% Types
 -type handler() :: module().
@@ -28,9 +31,7 @@
 
 %% Aplication
 start() ->
-	application:load(aberth),
-    aberth_app:ensure_deps_started(),
-	ok = application:start(aberth),
+    application:ensure_all_started(aberth),
     lager:info("Aberth started.").
 
 stop() ->
@@ -68,3 +69,43 @@ not_loaded(Mod) ->
 	Msg = list_to_binary(io_lib:format("Module '~p' not loaded", [Mod])),
 	{error, {server, 1, <<"ServerError">>, Msg, []}}.
 
+%% Client API funs
+
+call(Host, Port, Mod, Fun, Args) ->
+    call_1(call, Host, Port, Mod, Fun, Args).
+
+cast(Host, Port, Mod, Fun, Args) ->
+    call_1(cast, Host, Port, Mod, Fun, Args).
+
+%% Client internal funs
+
+call_1(Type, Host, Port, Mod, Fun, Args) ->
+    case gen_tcp:connect(Host, Port, [binary, {packet, 4}, {active, false}]) of
+        {ok, Socket} ->
+            call_2(Type, Socket, Mod, Fun, Args);
+        Error ->
+            Error
+    end.
+
+call_2(Type, Socket, Mod, Fun, Args) ->
+    Request = bert:encode({Type, Mod, Fun, Args}),
+    ok = gen_tcp:send(Socket, Request),
+    case gen_tcp:recv(Socket, 0) of
+        {ok, Received} ->
+            gen_tcp:close(Socket),
+            decode(Received);
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+decode(Data) ->
+    case bert:decode(Data) of
+        {reply, Reply} ->
+            Reply;
+        {noreply} ->
+            ok;
+        {error, Error} ->
+            {error, Error};
+        Other ->
+            {error, {bad_response, Other}}
+    end.
