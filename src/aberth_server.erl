@@ -29,11 +29,7 @@ start() ->
 
 -spec start_link() -> {ok, pid()} | {error, any()}.
 start_link() ->
-    Workers = 
-        case application:get_env(aberth_server, workers) of
-            {ok, WorkerNum} -> WorkerNum;
-            undefined -> 100
-        end,
+    Workers = application:get_env(aberth_server, workers, 100),
     lager:info("Starting ~p workers", [Workers]),
     wpool:start_pool(
       ?MODULE,
