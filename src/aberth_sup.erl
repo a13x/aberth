@@ -38,5 +38,10 @@ start_link() ->
 
 init([]) ->
     ok = aberth_server:create_table(),
-    {ok, { {one_for_one, 5, 10}, [?CHILD(aberth_server, worker)]} }.
+    {ok, PoolSize} = application:get_env(aberth, pool),
+    Pool = poolboy:child_spec(aberth_server, [
+                                              {name, {local, aberth_server}},
+                                              {worker_module, aberth_server}]
+                              ++ PoolSize, []),
+    {ok, {{one_for_one, 5, 10}, [Pool]}}.
 

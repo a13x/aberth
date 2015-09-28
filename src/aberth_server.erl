@@ -16,7 +16,7 @@
 -behaviour(gen_server).
 -author("Aleksandar Radulovic <alex@a13x.net>").
 
--export([start/0, start_link/0]).
+-export([start/0, start_link/1]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -27,21 +27,15 @@
 start() ->
 	gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
--spec start_link() -> {ok, pid()} | {error, any()}.
-start_link() ->
-    Workers = application:get_env(aberth_server, workers, 100),
-    lager:info("Starting ~p workers", [Workers]),
-    wpool:start_pool(
-      ?MODULE,
-      [{workers, Workers},
-       {worker, {?MODULE, []}}]).
-
+-spec start_link(list()) -> {ok, pid()} | {error, any()}.
+start_link(_Args) ->
+    gen_server:start_link(?MODULE, [], []).
 
 -spec create_table() -> ok.
 create_table() ->
     case ets:info(?MODULE, named_table) of
         true -> exists;
-        undefined -> 
+        undefined ->
             ets:new(?MODULE,
                     [public,
                      set,
@@ -52,11 +46,15 @@ create_table() ->
 
 -spec allowed(aberth:handler()) -> true | false.
 allowed(Handler) ->
-	wpool:call(?MODULE, {lookup, Handler}).
+    poolboy:transaction(?MODULE, fun(Pid) ->
+        gen_server:call(Pid, {lookup, Handler})
+    end).
 
 -spec add_handlers(aberth:handlers()) -> ok.
 add_handlers(Handlers) ->
-	wpool:call(?MODULE, {add_handlers, Handlers}).
+    poolboy:transaction(?MODULE, fun(Pid) ->
+        gen_server:call(Pid, {add_handlers, Handlers})
+    end).
 
 %% gen_server API
 init([]) ->
