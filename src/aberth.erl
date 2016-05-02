@@ -53,8 +53,8 @@ start_server(NbAcceptors, Port, Handlers) ->
 %% Handlers is a list of modules that are wired to the server
 	_ = lists:map((fun code:ensure_loaded/1), Handlers),
 	aberth_server:add_handlers(Handlers),
-	barrel:start_listener(aberth, NbAcceptors, barrel_tcp,
-          [{packet, 4}, {port, Port}], aberth_protocol, []).
+	ranch:start_listener(aberth, NbAcceptors, ranch_tcp,
+          [{port, Port}], aberth_protocol, []).
 
 %% Utility funs
 no_such_module(Module) ->

@@ -13,6 +13,7 @@
 %% OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 -module(aberth_protocol).
+-behaviour(ranch_protocol).
 
 -type bert_type() :: call | cast.
 -type bert_info() :: any().
@@ -24,16 +25,22 @@
     }).
 -type state() :: #state{}.
 
--export([init/4]).
+-export([start_link/4, init/4]).
 
-init(_Ref, Transport, Socket, _Opts) ->
+start_link(Ref, Socket, Transport, Opts) ->
+    Pid = spawn_link(?MODULE, init, [Ref, Socket, Transport, Opts]),
+    {ok, Pid}.
+
+init(Ref, Socket, Transport, _Opts) ->
+    ok = ranch:accept_ack(Ref),
+    ok = Transport:setopts(Socket, [{packet, 4}]),
     {ok, {Ip, _Port}} = inet:peername(Socket),
     lager:info("got connection from ~p", [inet_parse:ntoa(Ip)]),
     wait_request(#state{transport = Transport, socket = Socket}).
 
 -spec wait_request(state()) -> ok.
 wait_request(State=#state{transport=Transport, socket=Socket}) ->
-    case Transport:recv(Socket, 0) of
+    case Transport:recv(Socket, 0, 5000) of
         {ok, Payload} ->
             Term = bert:decode(Payload),
             case process(Term, State) of

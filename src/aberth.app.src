@@ -11,7 +11,7 @@
                   syntax_tools,
                   goldrush,
                   lager,
-                  barrel
+                  ranch
                  ]},
   {mod, { aberth_app, []}},
   {env, [
