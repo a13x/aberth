@@ -10,6 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    %% lager:set_loglevel(lager_console_backend, debug),
     {ok, Port} = application:get_env(black_adder, port),
     Handlers = [dictoid, example],
     NbAcceptors = 100,
