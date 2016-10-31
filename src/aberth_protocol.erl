@@ -63,9 +63,25 @@ process_module(Mod, Fun, Args, Info) ->
         false -> aberth:not_loaded(Mod)
     end.
 
-process_method(Mod, Fun, Args, _Info) ->
+%% @doc applies a method with callback info packet and casts result to callback
+apply_method(Mod, Fun, Args,
+             _Info={callback,
+                    [{service, Service},
+                     {mfa, CMod, CFun, CArgs}]})
+  when is_binary(Service) ->
+    Result = apply(Mod, Fun, Args),
+    [BHost,BPort] = binary:split(Service, [<<$:>>]),
+    Host = binary_to_list(BHost),
+    Port = binary_to_integer(BPort),
+    aberth:cast(Host, Port, {mfa, CMod, CFun, CArgs ++ [Result]}, []),
+    {ok, {noreply}};
+
+apply_method(Mod, Fun, Args, _Info) ->
+    {reply, apply(Mod, Fun, Args)}.
+
+process_method(Mod, Fun, Args, Info) ->
     case erlang:function_exported(Mod, Fun, length(Args)) of
-        true -> {reply, apply(Mod, Fun, Args)};
+        true -> apply_method(Mod, Fun, Args, Info);
         false -> aberth:not_allowed(Fun)
     end.
 

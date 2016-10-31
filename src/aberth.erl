@@ -21,7 +21,7 @@
 %% Utils
 -export([no_such_module/1, not_allowed/1, not_loaded/1]).
 %% Client
--export([call/5, cast/5]).
+-export([call/4, cast/4]).
 
 
 %% Types
@@ -51,12 +51,13 @@ start_server(NbAcceptors, Port, Handlers) ->
 %% NbAcceptors is a number of processes that receive connections
 %% Port is a port number the server should listen to
 %% Handlers is a list of modules that are wired to the server
-	_ = lists:map((fun code:ensure_loaded/1), Handlers),
+	ok = lists:foreach(fun code:ensure_loaded/1, Handlers),
 	aberth_server:add_handlers(Handlers),
 	ranch:start_listener(aberth, NbAcceptors, ranch_tcp,
           [{port, Port}], aberth_protocol, []).
 
 %% Utility funs
+
 no_such_module(Module) ->
 	Msg = list_to_binary(io_lib:format("Module '~p' not found", [Module])),
 	{error, {server, 1,	<<"ServerError">>, Msg, []}}.
@@ -71,25 +72,26 @@ not_loaded(Mod) ->
 
 %% Client API funs
 
-call(Host, Port, Mod, Fun, Args) ->
-    call_1(call, Host, Port, Mod, Fun, Args).
+call(Host, Port, {mfa, Mod, Fun, Args}, Info) when is_list(Args) andalso is_list(Info) ->
+    Packets = lists:map(fun bert:encode/1, Info ++ [{call, Mod, Fun, Args}]),
+    call_1(Host, Port, Packets).
 
-cast(Host, Port, Mod, Fun, Args) ->
-    call_1(cast, Host, Port, Mod, Fun, Args).
+cast(Host, Port, {mfa, Mod, Fun, Args}, Info) when is_list(Args) andalso is_list(Info) ->
+    Packets = lists:map(fun bert:encode/1, Info ++ [{cast, Mod, Fun, Args}]),
+    call_1(Host, Port, Packets).
 
 %% Client internal funs
 
-call_1(Type, Host, Port, Mod, Fun, Args) ->
+call_1(Host, Port, Packets) when is_list(Packets) ->
     case gen_tcp:connect(Host, Port, [binary, {packet, 4}, {active, false}]) of
         {ok, Socket} ->
-            call_2(Type, Socket, Mod, Fun, Args);
+            call_2(Socket, Packets);
         Error ->
             Error
     end.
 
-call_2(Type, Socket, Mod, Fun, Args) ->
-    Request = bert:encode({Type, Mod, Fun, Args}),
-    ok = gen_tcp:send(Socket, Request),
+call_2(Socket, Packets) ->
+    ok = lists:foreach(fun(X) -> gen_tcp:send(Socket,X) end, Packets),
     case gen_tcp:recv(Socket, 0) of
         {ok, Received} ->
             gen_tcp:close(Socket),
@@ -97,6 +99,7 @@ call_2(Type, Socket, Mod, Fun, Args) ->
         {error, Reason} ->
             {error, Reason}
     end.
+
 
 decode(Data) ->
     case bert:decode(Data) of
