@@ -32,7 +32,7 @@
 %% Aplication
 start() ->
     application:ensure_all_started(aberth),
-    lager:info("Aberth started.").
+    ok.
 
 stop() ->
 	application:stop(aberth).

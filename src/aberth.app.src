@@ -8,9 +8,6 @@
                   stdlib,
                   sasl,
                   compiler,
-                  syntax_tools,
-                  goldrush,
-                  lager,
                   ranch
                  ]},
   {mod, { aberth_app, []}},
