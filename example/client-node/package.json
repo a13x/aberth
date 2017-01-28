@@ -1,0 +1,10 @@
+{
+  "name": "bertest",
+  "version": "1.0.0",
+  "description": "Just a BERT RPC test",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "node-bertrpc": "^1.0.1"
+  }
+}

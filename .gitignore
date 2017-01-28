@@ -1,11 +1,9 @@
 .DS_Store
 .eunit
 .rebar
-ebin/
-deps/
+ebin
+deps
+log
 *.o
 *.beam
 *.plt
-example/ebin
-example/deps
-example/log
