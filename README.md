@@ -7,7 +7,7 @@ __Version:__ 0.9
 [![Build Status](https://travis-ci.org/a13x/aberth.png?branch=master)](https://travis-ci.org/a13x/aberth)
 
 aberth is a **generic BERT-RPC server** in Erlang. It exposes regular erlang modules and it uses
-[barrel](https://github.com/benoitc/barrel) as TCP acceptor pool
+[ranch](https://github.com/ninenines/ranch) as TCP acceptor pool
 which provides low-latency when accepting connections.
 
 The inspiration for the name came from [Abarth](http://en.wikipedia.org/wiki/Abarth) and [BERT](http://bert-rpc.org/).
@@ -23,8 +23,6 @@ Therefore, at the moment, those are not passed through - if you have an idea on 
 feel free to send a pull request!
 
 ## Usage
-
-> Note: You will need [rebar](https://github.com/rebar/rebar) to compile.
 
 Check the example app - it demonstrates including aberth in your OTP app, with clients in Python and Ruby.
 
@@ -57,7 +55,7 @@ Handlers = [some_module, some_adder],
 aberth:start_server(NumberOfAcceptors, Port, Handlers).
 ```
 
-That's about it - aberth will listen to requests on Port number, with set number of acceptors. Scaling aberth is done via [barrel](https://github.com/benoitc/barrel), so all barrel options apply to aberth as well.
+That's about it - aberth will listen to requests on Port number, with set number of acceptors. Scaling aberth is done via [ranch](https://github.com/ninenines/ranch), so all ranch options apply to aberth as well.
 
 Aberth is an OTP app so you can easily make it a part of your own OTP app.
 

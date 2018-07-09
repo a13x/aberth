@@ -1,9 +1,10 @@
 .DS_Store
 .eunit
-.rebar
 ebin
 deps
-log
 *.o
 *.beam
 *.plt
+erl_crash.dump
+ebin/*.beam
+.erlang.mk

@@ -10,6 +10,7 @@
                   compiler,
                   ranch
                  ]},
+  {modules, []},
   {mod, { aberth_app, []}},
   {env, [
     {pool, [

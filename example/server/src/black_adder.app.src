@@ -7,6 +7,8 @@
                   kernel,
                   stdlib
                  ]},
+  {modules, []},
+  {mod, { black_adder_app, []}},
   {mod, { black_adder_app, []}},
   {env, [{port, 10001}]}
  ]}.
